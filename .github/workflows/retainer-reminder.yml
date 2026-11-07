@@ -1,0 +1,50 @@
+name: Retainer WeChat Reminder
+# Set repository Actions secret SERVERCHAN_KEY to your Server酱 SendKey.
+# GitHub Settings → Secrets and variables → Actions → New repository secret.
+# Scheduled workflows may be delayed by GitHub, and can be disabled after
+# prolonged repository inactivity. Run manually from the Actions tab to test.
+on:
+  schedule:
+    # Tuesday, Thursday, Saturday 23:30 China time (UTC+8).
+    - cron: '30 15 * * 2,4,6'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send ServerChan reminder
+        env:
+          SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          import urllib.parse
+          import urllib.request
+          key = os.environ.get('SERVERCHAN_KEY', '').strip()
+          if not re.fullmatch(r'[A-Za-z0-9_-]+', key):
+              sys.exit('Missing or invalid SERVERCHAN_KEY repository secret.')
+          payload = urllib.parse.urlencode({
+              'title': '保持器佩戴提醒',
+              'desp': '晚上好，记得今晚佩戴保持器！'
+          }).encode('utf-8')
+          request = urllib.request.Request(
+              f'https://sctapi.ftqq.com/{key}.send',
+              data=payload,
+              headers={'Content-Type': 'application/x-www-form-urlencoded'},
+              method='POST',
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=10) as response:
+                  result = json.load(response)
+          except Exception:
+              sys.exit('ServerChan request failed. Check connectivity and credentials.')
+          if result.get('code') != 0:
+              sys.exit(f"ServerChan rejected the notification (code: {result.get('code')}).")
+          print('ServerChan accepted the notification.')
+          PY
