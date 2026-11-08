@@ -2,7 +2,7 @@ name: Alternate-day WeChat Reminder
 # Manual runs send one test message; scheduled runs follow the Beijing date.
 on:
   schedule:
-    - cron: '10-50/10 15 * * *'
+    - cron: '20,30,40,50,55 15 * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,7 +26,7 @@ jobs:
           import urllib.request
           tz = dt.timezone(dt.timedelta(hours=8))
           now = dt.datetime.now(tz)
-          start = dt.date(2026, 11, 8)
+          start = dt.date(2026, 11, 9)
           days = ((now - dt.timedelta(hours=4)).date() - start).days
           due = days >= 0 and days % 2 == 0
           print(f'Beijing date: {now.date()}; scheduled reminder day: {due}')
