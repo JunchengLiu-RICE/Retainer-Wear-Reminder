@@ -1,7 +1,5 @@
 name: Alternate-day WeChat Reminder
-# Set repository secret SERVERCHAN_ALTERNATE_KEY to the second SendKey.
-# Scheduled runs are evaluated against the Beijing date, starting 2026-11-08.
-# Manual runs are dry runs and do not send a message.
+# Manual runs send one test message; scheduled runs follow the Beijing date.
 on:
   schedule:
     - cron: '10,20,30,40,50 15 * * *'
@@ -35,10 +33,7 @@ jobs:
           key = os.environ.get('SERVERCHAN_KEY', '').strip()
           if not re.fullmatch(r'[A-Za-z0-9_-]+', key):
               sys.exit('Missing or invalid SERVERCHAN_ALTERNATE_KEY secret.')
-          if os.environ.get('EVENT_NAME') == 'workflow_dispatch':
-              print('Dry run: no notification sent.')
-              sys.exit(0)
-          if not due:
+          if not due and os.environ.get('EVENT_NAME') != 'workflow_dispatch':
               print('Not a reminder day; skipping.')
               sys.exit(0)
           payload = urllib.parse.urlencode({
