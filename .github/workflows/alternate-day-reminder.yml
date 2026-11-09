@@ -3,7 +3,13 @@ name: Alternate-day WeChat Reminder
 on:
   schedule:
     - cron: '20,30,40,50,55 15 * * *'
+    # Temporary UTC scheduler diagnostics on November 9; no push is sent.
+    - cron: '47,52 22 9 11 *'
   workflow_dispatch:
+concurrency:
+  group: alternate-day-reminder
+  cancel-in-progress: false
+
 permissions:
   contents: read
 jobs:
@@ -11,10 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Check date and send reminder
         env:
           SERVERCHAN_KEY: ${{ secrets.SERVERCHAN_ALTERNATE_KEY }}
           EVENT_NAME: ${{ github.event_name }}
+          EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           python3 - <<'PY'
           import datetime as dt
@@ -30,6 +40,9 @@ jobs:
           days = ((now - dt.timedelta(hours=4)).date() - start).days
           due = days >= 0 and days % 2 == 0
           print(f'Beijing date: {now.date()}; scheduled reminder day: {due}')
+          if os.environ.get('EVENT_NAME') == 'schedule' and os.environ.get('EVENT_SCHEDULE') == '47,52 22 9 11 *':
+              print('Scheduled diagnostic ran; no notification sent.')
+              sys.exit(0)
           key = os.environ.get('SERVERCHAN_KEY', '').strip()
           if not re.fullmatch(r'[A-Za-z0-9_-]+', key):
               sys.exit('Missing or invalid SERVERCHAN_ALTERNATE_KEY secret.')
