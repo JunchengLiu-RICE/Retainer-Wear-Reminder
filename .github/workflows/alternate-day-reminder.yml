@@ -6,10 +6,6 @@ on:
     # Temporary UTC scheduler diagnostics on November 9; no push is sent.
     - cron: '47,52 22 9 11 *'
   workflow_dispatch:
-concurrency:
-  group: alternate-day-reminder
-  cancel-in-progress: false
-
 permissions:
   contents: read
 jobs:
