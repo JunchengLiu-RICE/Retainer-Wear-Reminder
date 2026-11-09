@@ -3,8 +3,6 @@ name: Alternate-day WeChat Reminder
 on:
   schedule:
     - cron: '20,30,40,50,55 15 * * *'
-    # Temporary UTC scheduler diagnostics on November 9; no push is sent.
-    - cron: '47,52 22 9 11 *'
   workflow_dispatch:
 permissions:
   contents: read
